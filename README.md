@@ -6,13 +6,13 @@
 
 
 ## Basic Details
-### Team Name: [Name]
+### Team Name: [Unemployed.exe]
 
 
 ### Team Members
-- Team Lead: [Name] - [College]
-- Member 2: [Name] - [College]
-- Member 3: [Name] - [College]
+- Team Lead: [Shawn Subin Philip] - [Muthoot Institute of Technology and Science]
+- Member 2: [Cilen George Anil] - [Muthoot Institute of Technology and Science]
+
 
 ### Project Description
 [2-3 lines about what your project does]
