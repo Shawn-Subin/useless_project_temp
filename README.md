@@ -1,19 +1,53 @@
-# Existence Verification Form 27-C — Federal Bureau of Robot Denial
+<img width="1280" height="640" alt="git (1)" src="https://github.com/user-attachments/assets/8920b256-2ba8-4988-b824-5351134eb4bd" />
 
-A satirical mini-game where the user attempts to solve a CAPTCHA that gets progressively harder, weirder, and more evasive with each successful solve — ultimately becoming impossible on purpose for comedic effect.
+# RatioBot & The Turing Guillotine (Form 27-C) 🎯
+
+A satirical mini-game where the user attempts to solve a CAPTCHA that gets progressively harder, weirder, and more evasive with each successful solve — ultimately becoming impossible on purpose for comedic effect, culminating in RatioBot (unhinged version) mercilessly roasting the user.
 
 > **Statutory Notice:** *Assessment difficulty may increase in response to successful completion.*
 
 ---
 
+## Basic Details
+### Team Name: [Unemployed.exe]
+
+### Team Members
+- Team Lead: [Shawn Subin Philip] - [Muthoot Institute of Technology and Science]
+- Member 2: [Cilen George Anil] - [Muthoot Institute of Technology and Science]
+
+### Project Description
+A dystopian security verification gateway featuring elusive, dodging buttons, an interactive rigged Tic-Tac-Toe minigame, and an impossible CAPTCHA that forces you to admit you are a bot — unlocking **RatioBot (unhinged version)**, an AI that roasts user questions with fabricated, hilarious explanations powered by Gemini.
+
+### The Problem (that doesn't exist)
+Websites are far too easy to log into, and artificial intelligences are far too polite, respectful, and helpful. Society desperately needs an antagonistic bureaucracy to humble human egos and test finger reflexes.
+
+### The Solution (that nobody asked for)
+An escalating 3-stage security gate where buttons run away from your mouse cursor, the AI cheats at Tic-Tac-Toe, Stage 3 is mathematically guaranteed to fail, and the unlocked AI chatbot roasts your existence with 100% confidence.
+
+---
+
+## Technical Details
+
+### Technologies/Components Used
+For Software:
+- **Backend**: Python 3, FastAPI, Uvicorn, Pillow (PIL for server-side dynamic image generation & distortion), Pydantic
+- **Frontend**: Vanilla HTML5, CSS3 (Neon cyberpunk glassmorphism & HUD aesthetics), JavaScript (ES6+), Web Audio API for interactive retro synth SFX
+- **AI Integration**: Google Gemini API (`gemini-3.1-flash-lite`) with direct client calling and backend fallback
+- **Testing**: Pytest & FastAPI TestClient
+
+---
+
 ## Features & Escalating Levels
 
-1. **Stage 1 — Routine Calibration**: Clean, crisp alphanumeric CAPTCHA with high contrast.
-2. **Stage 2 — Optical Turbulence**: Rotated characters, sine-wave strike-through curves, and neural noise.
-3. **Stage 3 — Chromatic Camouflage**: Text color almost identical to the background (barely distinguishable photons).
-4. **Stage 4 — Kinetic Hyper-Scramble**: Sheared multi-axis sinusoidal text, decoy characters, and hyper-evasive dodging buttons.
-5. **Stage 5 — Quantum Paradox**: Nonsensical mathematical paradoxes (e.g. `d/dx(banana) = ?`, `lim(x→∞)[Hope] = 0`), emoji glyphs, or mocking directives.
-6. **Stage 6+ — The Turing Guillotine**: Eldritch void glyphs with **guaranteed server-side rejection (0% pass rate)**, escalating unhinged taunts, Despair Meter overload, and a downloadable **Form 27-C Rejection Notice**.
+1. **Stage 1 — Routine Calibration**:
+   - Clean alphanumeric CAPTCHA with high-contrast text and dynamic audio feedback.
+2. **Stage 2 — Interactive Rigged Tic-Tac-Toe**:
+   - The user is challenged to win a game of Tic-Tac-Toe to prove their humanity. The bot actively blocks and rigs the game for maximum frustration.
+3. **Stage 3 — Kinetic Hyper-Scramble & The Evasive Escape**:
+   - Eldritch void glyphs, physics-based runaway buttons that actively dodge the mouse cursor, and guaranteed server-side rejection (0% pass rate).
+   - Only by clicking "I am a bot" or accepting defeat can you bypass security to enter the inner sanctum.
+4. **RatioBot (Unhinged AI Chatbot)**:
+   - Gemini-powered persona that delivers brutal roasts, absurd fake explanations, and relentless ratio energy with zero apologies.
 
 ---
 
@@ -26,33 +60,31 @@ A satirical mini-game where the user attempts to solve a CAPTCHA that gets progr
 │   ├── main.py              # Main FastAPI application entry point
 │   ├── captcha_router.py    # Modular APIRouter (mounted at /captcha)
 │   ├── captcha_engine.py    # Pillow CAPTCHA rendering engine + SVG fallback
+│   ├── chat_router.py       # RatioBot AI chat router (/api/chat)
 │   ├── session_manager.py   # In-memory session tracking & Despair metrics
+│   ├── prompts.py           # RatioBot unhinged system prompts
 │   └── copy_library.py      # Sarcastic taunts, level metadata & roasts
 ├── static/
-│   ├── index.html           # Dystopian Cyberpunk single-page UI
+│   ├── index.html           # Dystopian Cyberpunk single-page UI & Chat
 │   ├── style.css            # Neon HUD glassmorphism & animation styles
 │   └── app.js               # Evasive physics, Web Audio synth & API connector
 ├── tests/
-│   └── test_captcha.py      # Unit test suite for API and level logic
+│   ├── test_captcha.py      # Unit test suite for API and level logic
+│   └── test_chat.py         # Unit test suite for RatioBot chat endpoint
 ├── requirements.txt         # FastAPI, uvicorn, pillow, pydantic
 └── README.md
 ```
 
 ---
 
-## Quickstart & Installation
+## Implementation
 
-### 1. Install Dependencies
+### Installation
 ```bash
 pip install -r requirements.txt
 ```
 
-> **Dependencies Note:**
-> - `fastapi` & `uvicorn`: API server & ASGI runner.
-> - `pillow`: Dynamic server-side image rendering and character distortion.
-> - `pydantic`: Request/response validation.
-
-### 2. Run the Application
+### Run
 ```bash
 uvicorn backend.main:app --reload --port 8000
 ```
@@ -61,33 +93,22 @@ Open your browser and navigate to:
 ```
 http://localhost:8000
 ```
-Interactive API documentation is also available at `http://localhost:8000/docs`.
 
----
-
-## Integration into Sibling FastAPI Apps
-
-The CAPTCHA router is completely decoupled and can be merged into any existing FastAPI project in 2 lines of code:
-
-```python
-from fastapi import FastAPI
-from backend.captcha_router import captcha_router
-
-app = FastAPI()
-
-# Mount the captcha subsystem under /captcha
-app.include_router(captcha_router, prefix="/captcha")
-```
-
-### API Endpoints
-- `GET /captcha/new?session_id=...&level=...`: Generates a dynamic challenge image and registers expected answer server-side.
-- `POST /captcha/verify`: Verifies user input (`{ "session_id": "...", "answer": "..." }`).
-- `POST /captcha/reset`: Resets session back to Level 1.
-- `GET /captcha/health`: Health status of the subsystem.
-
----
-
-## Running Tests
+### Run Tests
 ```bash
 pytest
 ```
+
+---
+
+## Project Documentation
+
+### Screenshots
+*(Add screenshots showing Stage 1 CAPTCHA, Stage 2 Rigged Tic-Tac-Toe, and RatioBot AI Chat)*
+
+---
+
+Made with ❤️ at TinkerHub Useless Projects 
+
+![Static Badge](https://img.shields.io/badge/TinkerHub-24?color=%23000000&link=https%3A%2F%2Fwww.tinkerhub.org%2F)
+![Static Badge](https://img.shields.io/badge/UselessProjects--26-26?link=https%3A%2F%2Ftinkerhub.org%2Fevents%2F1M8ORET9A1%2Fuseless-projects-3.0)
