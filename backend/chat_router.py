@@ -76,7 +76,7 @@ def call_gemini_api(api_key: str, user_message: str, history: List[ChatMessage])
         config = types.GenerateContentConfig(
             system_instruction=SYSTEM_PROMPT,
             temperature=0.85,
-            max_output_tokens=300
+            max_output_tokens=90
         )
 
         response = client.models.generate_content(
@@ -141,7 +141,7 @@ def call_gemini_api(api_key: str, user_message: str, history: List[ChatMessage])
         "contents": contents_payload,
         "generationConfig": {
             "temperature": 0.85,
-            "maxOutputTokens": 300
+            "maxOutputTokens": 90
         }
     }
 
