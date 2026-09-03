@@ -104,7 +104,28 @@ pytest
 ## Project Documentation
 
 ### Screenshots
-*(Add screenshots showing Stage 1 CAPTCHA, Stage 2 Rigged Tic-Tac-Toe, and RatioBot AI Chat)*
+
+#### Step 1 — Alphanumeric Calibration Challenge
+![Step 1 CAPTCHA](assets/step1-captcha.png)
+*Alphanumeric CAPTCHA challenge with high-contrast text and dynamic noise waveforms.*
+
+#### Step 2 — Interactive Rigged Tic-Tac-Toe
+![Step 2 Tic-Tac-Toe](assets/step2-tictactoe.png)
+*Rigged Tic-Tac-Toe challenge enforcing arbitrary security clauses (e.g. Toroidal Jump Clause 7).*
+
+---
+
+### Project Demo Videos
+
+#### Demo Video 1 — Security Gate Gameplay Walkthrough
+[▶️ **Watch / Download Demo Video 1 (Full Security Gate)**](assets/recording-1.mp4)
+
+https://github.com/Shawn-Subin/useless_project_temp/raw/main/assets/recording-1.mp4
+
+#### Demo Video 2 — Evasive Runaway Buttons & RatioBot Roast
+[▶️ **Watch / Download Demo Video 2 (Evasive Buttons & RatioBot)**](assets/recording-2.mp4)
+
+https://github.com/Shawn-Subin/useless_project_temp/raw/main/assets/recording-2.mp4
 
 ---
 
