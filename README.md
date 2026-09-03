@@ -1,6 +1,6 @@
 <img width="1280" height="640" alt="git (1)" src="https://github.com/user-attachments/assets/8920b256-2ba8-4988-b824-5351134eb4bd" />
 
-# RatioBot & The Turing Guillotine (Form 27-C) 🎯
+# RatioBot  
 
 A satirical mini-game where the user attempts to solve a CAPTCHA that gets progressively harder, weirder, and more evasive with each successful solve — ultimately becoming impossible on purpose for comedic effect, culminating in RatioBot (unhinged version) mercilessly roasting the user.
 
