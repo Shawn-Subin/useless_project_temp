@@ -1,0 +1,948 @@
+/* ==========================================================================
+   Google reCAPTCHA Gatekeeper + Google Gemini Style RatioBot UI
+   ========================================================================== */
+
+:root {
+  --rc-primary: #1a73e8;
+  --rc-primary-hover: #1557b0;
+  --rc-surface: #ffffff;
+  --rc-bg: #f0f2f5;
+  --rc-border: #d3d3d3;
+  --rc-border-subtle: #e0e0e0;
+  --rc-text-main: #202124;
+  --rc-text-muted: #5f6368;
+  --rc-error: #d93025;
+  
+  /* Google Gemini Theme Tokens */
+  --gemini-bg: #131314;
+  --gemini-surface: #1e1f20;
+  --gemini-surface-hover: #282a2c;
+  --gemini-drawer-bg: #18191b;
+  --gemini-border: #3c4043;
+  --gemini-text: #e3e3e3;
+  --gemini-text-muted: #9aa0a6;
+  --gemini-gold: #ffd700;
+  --gemini-gold-gradient: linear-gradient(90deg, #f59e0b 0%, #ffd700 100%);
+  --gemini-sparkle: linear-gradient(135deg, #4285f4 0%, #9b72cb 45%, #d96570 75%, #f2994a 100%);
+  
+  --font-sans: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--rc-bg);
+  color: var(--rc-text-main);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.4s ease;
+  overflow-x: hidden;
+}
+
+body.in-chat-mode {
+  background-color: var(--gemini-bg);
+}
+
+/* ==========================================================================
+   1. GOOGLE reCAPTCHA GATEKEEPER STYLES
+   ========================================================================== */
+
+.recaptcha-wrapper {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  padding: 16px;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.recaptcha-card {
+  width: 100%;
+  background: var(--rc-surface);
+  border: 1px solid var(--rc-border);
+  border-radius: 3px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.rc-header {
+  background: var(--rc-primary);
+  color: #ffffff;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rc-subtitle {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  opacity: 0.85;
+  font-weight: 500;
+}
+
+.rc-title {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.rc-desc {
+  font-size: 13px;
+  opacity: 0.95;
+  margin-top: 2px;
+  font-weight: 400;
+}
+
+.rc-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rc-image-frame {
+  width: 100%;
+  height: 145px;
+  background: #f8f9fa;
+  border: 1px solid var(--rc-border-subtle);
+  border-radius: 2px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.rc-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.rc-shader {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.rc-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 5;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.rc-loading-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.rc-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(26, 115, 232, 0.2);
+  border-top-color: var(--rc-primary);
+  border-radius: 50%;
+  animation: rcSpin 0.7s linear infinite;
+}
+
+@keyframes rcSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Stage 2: Tic-Tac-Toe Grid */
+.rc-tictactoe-bay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: #fafafa;
+  border: 1px solid var(--rc-border-subtle);
+  border-radius: 2px;
+  padding: 12px;
+}
+
+.rc-tictactoe-bay.hidden {
+  display: none;
+}
+
+.rc-ttt-prompt {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--rc-primary);
+  text-align: center;
+}
+
+.rc-ttt-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 75px);
+  grid-template-rows: repeat(3, 60px);
+  gap: 4px;
+}
+
+.rc-ttt-cell {
+  background: #ffffff;
+  border: 1px solid #cfd8dc;
+  border-radius: 2px;
+  font-size: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.rc-ttt-cell:hover:not(:disabled) {
+  background: #e8f0fe;
+  border-color: var(--rc-primary);
+}
+
+.rc-ttt-cell.cell-x {
+  color: var(--rc-primary);
+}
+
+.rc-ttt-cell.cell-o {
+  color: var(--rc-error);
+}
+
+.rc-ttt-cell.cell-rigged-win {
+  background: #fce8e6 !important;
+  border-color: var(--rc-error) !important;
+  animation: rcRiggedFlash 0.5s infinite alternate ease-in-out;
+}
+
+@keyframes rcRiggedFlash {
+  from { transform: scale(1); }
+  to { transform: scale(1.04); }
+}
+
+.rc-clause-box {
+  width: 100%;
+  background: #fdf2f2;
+  border: 1px solid #fad2cf;
+  border-radius: 3px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rc-clause-box.hidden {
+  display: none;
+}
+
+.rc-clause-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--rc-error);
+}
+
+.rc-clause-text {
+  font-size: 12px;
+  color: #5f6368;
+  line-height: 1.4;
+}
+
+.rc-proceed-btn {
+  margin-top: 4px;
+  align-self: flex-end;
+}
+
+/* Form & Input */
+.rc-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rc-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.rc-input {
+  width: 100%;
+  padding: 10px 34px 10px 12px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font-size: 14px;
+  color: var(--rc-text-main);
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.rc-input:focus {
+  border-color: var(--rc-primary);
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+.rc-clear-btn {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  color: var(--rc-text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rc-clear-btn:hover {
+  background: #f1f3f4;
+}
+
+.rc-feedback-banner {
+  font-size: 13px;
+  color: var(--rc-error);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.rc-feedback-banner.hidden {
+  display: none;
+}
+
+/* Bottom Toolbar */
+.rc-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px 12px 16px;
+  border-top: 1px solid #ebebeb;
+  min-height: 56px;
+  position: relative;
+}
+
+.rc-tools {
+  display: flex;
+  gap: 6px;
+}
+
+.rc-tool-btn {
+  background: none;
+  border: none;
+  padding: 6px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.rc-tool-btn:hover {
+  background: #f1f3f4;
+}
+
+.rc-verify-bay {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  min-width: 110px;
+}
+
+.rc-btn {
+  border: none;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.rc-btn-primary {
+  background: var(--rc-primary);
+  color: #ffffff;
+  padding: 9px 24px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  position: relative;
+}
+
+.rc-btn-primary:hover {
+  background: var(--rc-primary-hover);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+/* Running Across the Screen Evasive Mode */
+.rc-btn-primary.running-wild {
+  position: fixed !important;
+  z-index: 9999;
+  transition: left 0.36s cubic-bezier(0.2, 0.9, 0.2, 1), top 0.36s cubic-bezier(0.2, 0.9, 0.2, 1), box-shadow 0.2s !important;
+  box-shadow: 0 8px 24px rgba(26, 115, 232, 0.45) !important;
+  cursor: pointer;
+  animation: pulseGlow 1.5s infinite alternate ease-in-out;
+}
+
+@keyframes pulseGlow {
+  from { filter: drop-shadow(0 2px 8px rgba(26, 115, 232, 0.3)); }
+  to { filter: drop-shadow(0 4px 16px rgba(26, 115, 232, 0.6)); }
+}
+
+.rc-btn-bot {
+  background: #fce8e6;
+  color: var(--rc-error);
+  border: 1px solid #fad2cf;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.rc-btn-bot:hover {
+  background: #fad2cf;
+}
+
+.rc-brand-footnote {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 16px;
+  background: #fbfbfb;
+  border-top: 1px solid #f1f1f1;
+  font-size: 10px;
+  color: #70757a;
+}
+
+.rc-brand-name {
+  font-weight: 500;
+  color: #5f6368;
+}
+
+.rc-brand-links {
+  display: flex;
+  gap: 6px;
+}
+
+.rc-brand-links a {
+  color: #70757a;
+  text-decoration: none;
+}
+
+.rc-brand-links a:hover {
+  text-decoration: underline;
+}
+
+/* Modal */
+.rc-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.rc-modal-dialog {
+  background: #ffffff;
+  border-radius: 8px;
+  max-width: 360px;
+  width: 100%;
+  padding: 24px 20px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.rc-modal-icon {
+  font-size: 42px;
+}
+
+.rc-modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--rc-text-main);
+}
+
+.rc-modal-desc {
+  font-size: 13px;
+  color: var(--rc-text-muted);
+  line-height: 1.5;
+}
+
+.rc-modal-restart-btn {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+}
+
+/* ==========================================================================
+   2. GOOGLE GEMINI STYLE RATIOBOT CHAT UI
+   ========================================================================== */
+
+.gemini-app-wrapper {
+  width: 100%;
+  max-width: 980px;
+  height: 94vh;
+  display: flex;
+  justify-content: center;
+  animation: geminiFadeIn 0.35s ease;
+  font-family: var(--font-sans);
+}
+
+@keyframes geminiFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.gemini-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+}
+
+/* Gemini Top Header */
+.gemini-header {
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.gemini-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gemini-icon-btn-ghost {
+  background: transparent;
+  border: 1px solid var(--gemini-border);
+  color: var(--gemini-text-muted);
+  padding: 6px 12px;
+  border-radius: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.gemini-icon-btn-ghost:hover {
+  background: var(--gemini-surface-hover);
+  color: var(--gemini-text);
+  border-color: #5f6368;
+}
+
+.gemini-sparkle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gemini-title {
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--gemini-text);
+  letter-spacing: -0.2px;
+}
+
+/* Gold Subscript for (unhinged version) */
+.gold-subscript {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gemini-gold);
+  background: var(--gemini-gold-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 4px;
+  vertical-align: sub;
+}
+
+.gemini-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gemini-pill-btn {
+  background: var(--gemini-surface);
+  border: 1px solid var(--gemini-border);
+  color: var(--gemini-text-muted);
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.gemini-pill-btn:hover {
+  background: var(--gemini-surface-hover);
+  color: var(--gemini-text);
+  border-color: #5f6368;
+}
+
+.gemini-btn-new-chat {
+  background: rgba(66, 133, 244, 0.12);
+  border-color: rgba(66, 133, 244, 0.3);
+  color: #8ab4f8;
+}
+
+.gemini-btn-new-chat:hover {
+  background: rgba(66, 133, 244, 0.22);
+  color: #aecbfa;
+  border-color: #8ab4f8;
+}
+
+/* Main Layout Body: Drawer + Conversation */
+.gemini-layout-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+/* History Drawer */
+.gemini-history-drawer {
+  width: 260px;
+  background: var(--gemini-drawer-bg);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.gemini-history-drawer.hidden {
+  display: none;
+}
+
+.drawer-header {
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.drawer-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gemini-text);
+}
+
+.drawer-close-btn {
+  background: none;
+  border: none;
+  color: var(--gemini-text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+}
+
+.drawer-close-btn:hover {
+  color: var(--gemini-text);
+}
+
+.drawer-sessions-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.drawer-session-item {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.drawer-session-item:hover {
+  background: var(--gemini-surface-hover);
+}
+
+.drawer-session-item.active {
+  background: var(--gemini-surface);
+  border-color: rgba(138, 180, 248, 0.3);
+}
+
+.session-preview-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gemini-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-meta-time {
+  font-size: 10px;
+  color: var(--gemini-text-muted);
+}
+
+/* Main Conversation Feed */
+.gemini-conversation {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  scrollbar-width: thin;
+  scrollbar-color: #3c4043 transparent;
+}
+
+.gemini-msg-row {
+  display: flex;
+  gap: 14px;
+  max-width: 88%;
+  animation: geminiMsgPop 0.25s ease;
+}
+
+@keyframes geminiMsgPop {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.gemini-msg-row.msg-user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.gemini-msg-row.msg-ai {
+  align-self: flex-start;
+}
+
+.gemini-msg-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.msg-user .gemini-msg-avatar {
+  background: #3c4043;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.msg-ai .gemini-msg-avatar {
+  background: transparent;
+}
+
+.gemini-bubble {
+  font-size: 15px;
+  line-height: 1.6;
+  border-radius: 18px;
+}
+
+.msg-user .gemini-bubble {
+  background: var(--gemini-surface);
+  color: #ffffff;
+  padding: 12px 18px;
+  border-radius: 20px;
+  border-bottom-right-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.msg-ai .gemini-bubble {
+  color: var(--gemini-text);
+  padding: 6px 4px;
+}
+
+/* Gemini Typing Indicator */
+.gemini-typing-sparkle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 4px;
+}
+
+.gemini-pulse-dot {
+  width: 7px;
+  height: 7px;
+  background: #8ab4f8;
+  border-radius: 50%;
+  animation: geminiPulse 1.2s infinite ease-in-out;
+}
+
+.gemini-pulse-dot:nth-child(2) { animation-delay: 0.2s; background: #c58af9; }
+.gemini-pulse-dot:nth-child(3) { animation-delay: 0.4s; background: #f28b82; }
+
+@keyframes geminiPulse {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+  40% { transform: scale(1.1); opacity: 1; }
+}
+
+/* Gemini Bottom Prompt Area */
+.gemini-bottom-bar {
+  padding: 10px 20px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Suggestion Chips */
+.gemini-suggestion-tray {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px 4px;
+}
+
+.gemini-suggestion-tray::-webkit-scrollbar {
+  display: none;
+}
+
+.gemini-chip {
+  white-space: nowrap;
+  background: var(--gemini-surface);
+  border: 1px solid var(--gemini-border);
+  color: var(--gemini-text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.gemini-chip:hover {
+  background: var(--gemini-surface-hover);
+  border-color: #8ab4f8;
+  color: #ffffff;
+}
+
+/* Floating Prompt Capsule */
+.gemini-input-capsule {
+  display: flex;
+  align-items: center;
+  background: var(--gemini-surface);
+  border: 1px solid var(--gemini-border);
+  border-radius: 28px;
+  padding: 6px 12px 6px 20px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.gemini-input-capsule:focus-within {
+  border-color: #8ab4f8;
+  box-shadow: 0 0 0 1px #8ab4f8;
+}
+
+.gemini-text-input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--gemini-text);
+  font-family: inherit;
+  font-size: 15px;
+  outline: none;
+  padding: 10px 0;
+}
+
+.gemini-text-input::placeholder {
+  color: var(--gemini-text-muted);
+}
+
+.gemini-send-btn {
+  width: 40px;
+  height: 40px;
+  background: #8ab4f8;
+  border: none;
+  border-radius: 50%;
+  color: #131314;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.gemini-send-btn:hover {
+  background: #aecbfa;
+  transform: scale(1.05);
+}
+
+.gemini-footer-footnote {
+  text-align: center;
+  font-size: 11px;
+  color: var(--gemini-text-muted);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Screen shake on error */
+.screen-shake {
+  animation: rcShake 0.35s ease;
+}
+
+@keyframes rcShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}

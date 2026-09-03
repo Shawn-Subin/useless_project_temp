@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RatioBot (unhinged version) — Security Gate</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20260904">
+</head>
+<body>
+
+  <!-- ========================================================================
+       SECTION 1: GOOGLE reCAPTCHA GATEKEEPER (Initial View)
+       ======================================================================== -->
+  <div class="recaptcha-wrapper" id="recaptchaGatekeeper">
+    
+    <div class="recaptcha-card" id="recaptchaCard">
+      
+      <!-- Blue Header Prompt (Classic reCAPTCHA style) -->
+      <div class="rc-header">
+        <span class="rc-subtitle" id="levelPill">Step 1 of 3</span>
+        <h2 class="rc-title" id="levelTitle">Select all squares with letters</h2>
+        <p class="rc-desc" id="promptHint">Type the characters you see in the image below</p>
+      </div>
+
+      <!-- Main Challenge Content Bay -->
+      <div class="rc-content">
+        
+        <!-- Standard Image Challenge Frame -->
+        <div class="rc-image-frame" id="captchaFrame">
+          <img 
+            id="captchaImage" 
+            src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='380' height='140'><rect width='100%25' height='100%25' fill='%23f8f9fa'/><text x='50%25' y='55%25' text-anchor='middle' fill='%235f6368' font-family='sans-serif' font-size='14'>Loading challenge...</text></svg>" 
+            alt="reCAPTCHA challenge" 
+            class="rc-image"
+          >
+          <canvas id="glitchCanvas" class="rc-shader"></canvas>
+          
+          <div id="loadingOverlay" class="rc-loading-overlay">
+            <div class="rc-spinner"></div>
+          </div>
+        </div>
+
+        <!-- Stage 2: Interactive Tic-Tac-Toe Grid -->
+        <div id="tictactoeContainer" class="rc-tictactoe-bay hidden">
+          <div class="rc-ttt-prompt">
+            <span id="tttTurnStatus">Your turn: Place 'X' in any empty square</span>
+          </div>
+          
+          <div class="rc-ttt-grid" id="tttGrid">
+            <button type="button" class="rc-ttt-cell" data-index="0"></button>
+            <button type="button" class="rc-ttt-cell" data-index="1"></button>
+            <button type="button" class="rc-ttt-cell" data-index="2"></button>
+            <button type="button" class="rc-ttt-cell" data-index="3"></button>
+            <button type="button" class="rc-ttt-cell" data-index="4"></button>
+            <button type="button" class="rc-ttt-cell" data-index="5"></button>
+            <button type="button" class="rc-ttt-cell" data-index="6"></button>
+            <button type="button" class="rc-ttt-cell" data-index="7"></button>
+            <button type="button" class="rc-ttt-cell" data-index="8"></button>
+          </div>
+
+          <!-- Arbitrary Loss Banner -->
+          <div id="tttClauseBox" class="rc-clause-box hidden">
+            <div class="rc-clause-title" id="tttClauseTitle">SUPREME ARBITER OVERRIDE // CLAUSE 42-A</div>
+            <div class="rc-clause-text" id="tttClauseBody">The security arbiter has executed its Supreme Move. Please proceed to the final check.</div>
+            <button type="button" id="tttProceedBtn" class="rc-btn rc-btn-primary rc-proceed-btn">
+              <span>Continue to Step 3 ➔</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Input & Form Submission Area -->
+        <form id="captchaForm" class="rc-form" autocomplete="off">
+          <div class="rc-input-group">
+            <input 
+              type="text" 
+              id="captchaInput" 
+              class="rc-input" 
+              placeholder="Type the text" 
+              autofocus 
+              spellcheck="false"
+              autocomplete="off"
+            >
+            <button type="button" id="clearInputBtn" class="rc-clear-btn" title="Clear">✕</button>
+          </div>
+
+          <!-- Error / Feedback Banner -->
+          <div id="feedbackBox" class="rc-feedback-banner hidden">
+            <span class="rc-feedback-text" id="feedbackText">Please try again.</span>
+          </div>
+        </form>
+      </div>
+
+      <!-- Bottom reCAPTCHA Toolbar & Actions -->
+      <div class="rc-footer">
+        <div class="rc-tools">
+          <button type="button" id="refreshCaptchaBtn" class="rc-tool-btn" title="Get a new challenge">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="#5f6368"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          </button>
+          <button type="button" id="audioCaptchaBtn" class="rc-tool-btn" title="Get an audio challenge">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="#5f6368"><path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/></svg>
+          </button>
+          <button type="button" id="infoBtn" class="rc-tool-btn" title="Help">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="#5f6368"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          </button>
+        </div>
+
+        <!-- Action Button Arena (Verify & 'I am a bot' surrender button) -->
+        <div class="rc-verify-bay" id="submitArena">
+          <button type="button" id="botSurrenderBtn" class="rc-btn rc-btn-bot hidden" title="Admit defeat">
+            I am a bot
+          </button>
+          <button type="submit" form="captchaForm" id="submitBtn" class="rc-btn rc-btn-primary">
+            Verify
+          </button>
+        </div>
+      </div>
+
+      <!-- Google reCAPTCHA Brand Footnote -->
+      <div class="rc-brand-footnote">
+        <span class="rc-brand-name">reCAPTCHA</span>
+        <div class="rc-brand-links">
+          <a href="#" onclick="return false;">Privacy</a>
+          <span>-</span>
+          <a href="#" onclick="return false;">Terms</a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- "I am a bot" Surrender Dialog Modal -->
+    <div id="botModal" class="rc-modal-backdrop hidden">
+      <div class="rc-modal-dialog">
+        <div class="rc-modal-icon">🤖</div>
+        <h3 class="rc-modal-title">Verification Concluded</h3>
+        <p class="rc-modal-desc">Thank you for your honesty. You have officially self-identified as a synthetic entity. Access granted to RatioBot.</p>
+        <button type="button" id="enterChatFromBotBtn" class="rc-btn rc-btn-primary rc-modal-restart-btn">
+          <span>Enter RatioBot ➔</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ========================================================================
+       SECTION 2: GOOGLE GEMINI STYLE CHATBOT (RatioBot unhinged version)
+       ======================================================================== -->
+  <div class="gemini-app-wrapper hidden" id="chatbotContainer">
+    <div class="gemini-container">
+      
+      <!-- Gemini Top Navigation Header -->
+      <header class="gemini-header">
+        <div class="gemini-brand">
+          <!-- Sidebar / History Toggle Button -->
+          <button type="button" id="toggleHistoryBtn" class="gemini-icon-btn-ghost" title="Past Conversations">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+            </svg>
+            <span class="history-label">Chats</span>
+          </button>
+
+          <div class="gemini-sparkle-icon">
+            <svg viewBox="0 0 24 24" width="24" height="24">
+              <defs>
+                <linearGradient id="geminiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#4285f4"/>
+                  <stop offset="35%" stop-color="#9b72cb"/>
+                  <stop offset="70%" stop-color="#d96570"/>
+                  <stop offset="100%" stop-color="#f2994a"/>
+                </linearGradient>
+              </defs>
+              <path fill="url(#geminiGrad)" d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z"/>
+            </svg>
+          </div>
+          <div class="gemini-title-group">
+            <span class="gemini-title">RatioBot <sub class="gold-subscript">(unhinged version)</sub></span>
+          </div>
+        </div>
+
+        <div class="gemini-header-controls">
+          <!-- New Chat Button -->
+          <button type="button" id="newChatBtn" class="gemini-pill-btn gemini-btn-new-chat" title="Start a fresh conversation">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+            </svg>
+            <span>New chat</span>
+          </button>
+
+          <!-- API Key Manager Button -->
+          <button type="button" id="setApiKeyBtn" class="gemini-pill-btn" title="View or change Gemini API Key">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+            </svg>
+            <span>API Key</span>
+          </button>
+
+          <button type="button" id="relockCaptchaBtn" class="gemini-pill-btn" title="Re-lock with CAPTCHA">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+            </svg>
+            <span>Lock Security</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Layout Body (Drawer + Chat Conversation) -->
+      <div class="gemini-layout-body">
+        
+        <!-- Drawer: Past Conversations Sidebar -->
+        <aside class="gemini-history-drawer hidden" id="historyDrawer">
+          <div class="drawer-header">
+            <span class="drawer-title">Recent Chats</span>
+            <button type="button" id="closeDrawerBtn" class="drawer-close-btn">✕</button>
+          </div>
+          <div class="drawer-sessions-list" id="sessionsList">
+            <!-- Dynamically populated past chats -->
+          </div>
+        </aside>
+
+        <!-- Main Conversation Feed -->
+        <main class="gemini-conversation" id="chatMessages">
+          <!-- Dynamic message entries injected here -->
+        </main>
+      </div>
+
+      <!-- Gemini Bottom Floating Input Area -->
+      <div class="gemini-bottom-bar">
+        
+        <!-- Suggestion Chips -->
+        <div class="gemini-suggestion-tray" id="suggestionTray">
+          <button type="button" class="gemini-chip">The buttons were literally running away from me!</button>
+          <button type="button" class="gemini-chip">I had to click 'I am a bot' to get in.</button>
+          <button type="button" class="gemini-chip">The Tic-Tac-Toe game was 100% rigged.</button>
+          <button type="button" class="gemini-chip">Why is the sky blue?</button>
+        </div>
+
+        <!-- Floating Prompt Capsule -->
+        <form id="chatForm" class="gemini-input-capsule" autocomplete="off">
+          <input 
+            type="text" 
+            id="chatInput" 
+            class="gemini-text-input" 
+            placeholder="Ask RatioBot or reply to the roast..." 
+            spellcheck="false"
+            autocomplete="off"
+          >
+          <button type="submit" id="chatSendBtn" class="gemini-send-btn" title="Send">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+          </button>
+        </form>
+
+        <div class="gemini-footer-footnote">
+          RatioBot can make mistakes and will roast you relentlessly.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="config.js?v=20260904"></script>
+  <script src="app.js?v=20260904"></script>
+</body>
+</html>
