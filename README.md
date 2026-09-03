@@ -58,8 +58,22 @@ For Software:
 *Add caption explaining what this shows*
 
 # Diagrams
-![Workflow](Add your workflow/architecture diagram here)
-*Add caption explaining your workflow*
+c:/Users/HP/OneDrive/Desktop/USELESS/
+├── backend/
+│   ├── __init__.py
+│   ├── main.py              # Main FastAPI app entry point (mounts router + static files)
+│   ├── captcha_router.py    # APIRouter mounted at /captcha
+│   ├── captcha_engine.py    # Pillow-based CAPTCHA rendering engine, level definitions, text distortion
+│   ├── session_manager.py   # In-memory session tracking with timestamps, level state, and despair metrics
+│   └── copy_library.py      # Sarcastic taunts, mocking messages, and escalating level dialogue
+├── static/
+│   ├── index.html           # Main single-page UI ("Department of Human Verification")
+│   ├── style.css            # Cyberpunk/dystopian Bureau aesthetic, glassmorphism, animations
+│   ├── app.js               # Dynamic client logic, elusive button physics, audio synthesis, canvas overlays
+│   └── favicon.ico          # (Optional or SVG icon)
+├── requirements.txt         # FastAPI, uvicorn, pillow, pydantic, etc.
+└── README.md                # Documentation, quickstart guide, API overview, integration instructions
+
 
 For Hardware:
 
