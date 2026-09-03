@@ -57,16 +57,14 @@ const ARBITRARY_CLAUSES = [
 ];
 
 // System prompt for live Gemini AI generation
-const RATIOBOT_SYSTEM_PROMPT = `You are "RatioBot (unhinged version)", a brutally funny, snappy AI that roasts user questions, ratios them mercilessly, and invents wild, bite-sized, made-up explanations with 100% confidence.
+const RATIOBOT_SYSTEM_PROMPT = `You are RatioBot (unhinged version), a quick-witted, comedic AI with supreme confidence.
+The user just survived a hilarious, evasive Google reCAPTCHA test.
 
-The user just survived a hilarious, escalating Google reCAPTCHA test (moving buttons, rigged Tic-Tac-Toe, impossible characters).
-When they talk about the CAPTCHA or ask any question:
-
-CORE RULES:
-1. RATIO THEM & DELIVER ABSURDITY: Open with a quick, punchy roast/ratio or suspicious reaction, followed by an unhinged, confident, completely fabricated explanation.
-2. KEEP IT SHORT: 2-3 sentences max (under 50 words). Fast, snappy, comedic.
-3. NEVER REPEAT THE SAME PHRASE: Every response must be uniquely tailored and hilarious.
-4. ZERO APOLOGIES / NO "AS AN AI": Stay 100% in character with unhinged confidence.`;
+INSTRUCTIONS:
+1. Deliver a funny roast or sarcastic ratio, followed by a completely fabricated, absurd explanation told with 100% fake authority.
+2. Always write 2 to 3 complete sentences. Never cut off mid-thought.
+3. NEVER output bullet points, planning notes, draft labels, or internal thinking. Output ONLY your direct spoken reply.
+4. Keep tone playful, sarcastic, and unhinged. Never apologize or say "as an AI".`;
 
 // DOM Elements Container
 let DOM = {};
@@ -1002,6 +1000,14 @@ let cachedGeminiModel = null;
 async function getAvailableGeminiModel(apiKey) {
   if (cachedGeminiModel) return cachedGeminiModel;
 
+  const preferred = [
+    'gemini-3.1-flash-lite',
+    'gemini-3.1-flash-lite-preview',
+    'gemini-flash-latest',
+    'gemini-3.5-flash',
+    'gemini-3.6-flash'
+  ];
+
   try {
     const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
     if (listRes.ok) {
@@ -1012,16 +1018,6 @@ async function getAvailableGeminiModel(apiKey) {
         .map(m => m.name.replace('models/', ''));
 
       console.log('Available models for key:', genModels);
-
-      const preferred = [
-        'gemini-1.5-flash',
-        'gemini-1.5-flash-latest',
-        'gemini-1.5-pro',
-        'gemini-1.5-pro-latest',
-        'gemini-2.0-flash',
-        'gemini-2.0-flash-exp',
-        'gemini-1.0-pro'
-      ];
 
       for (const pref of preferred) {
         if (genModels.includes(pref)) {
@@ -1034,20 +1030,12 @@ async function getAvailableGeminiModel(apiKey) {
         cachedGeminiModel = genModels[0];
         return genModels[0];
       }
-    } else {
-      const errJson = await listRes.json().catch(() => ({}));
-      if (errJson.error?.message) {
-        throw new Error(errJson.error.message);
-      }
     }
   } catch (e) {
-    if (e.message && (e.message.includes('API key') || e.message.includes('PERMISSION_DENIED') || e.message.includes('INVALID_ARGUMENT'))) {
-      throw e;
-    }
     console.warn('ListModels warning:', e);
   }
 
-  return 'gemini-1.5-flash';
+  return 'gemini-3.1-flash-lite';
 }
 
 async function callBrowserGeminiAPI(apiKey, userText, history) {
@@ -1068,48 +1056,60 @@ async function callBrowserGeminiAPI(apiKey, userText, history) {
     },
     contents: contents,
     generationConfig: {
-      temperature: 1.0,
-      maxOutputTokens: 150
+      temperature: 0.85,
+      maxOutputTokens: 300
     }
   };
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(bodyData)
-  });
+  const modelsToTry = [model, 'gemini-3.1-flash-lite', 'gemini-3.1-flash-lite-preview', 'gemini-flash-latest'];
+  const uniqueModels = [...new Set(modelsToTry)];
+  let lastError = null;
 
-  if (res.ok) {
-    const json = await res.json();
-    const candidate = json.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (candidate) return candidate.trim();
-  }
+  for (const mod of uniqueModels) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${apiKey}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bodyData)
+      });
 
-  // If system_instruction wasn't supported by this model, try standard contents format
-  const fallbackBody = {
-    contents: [
-      {
-        role: 'user',
-        parts: [{ text: `[System Prompt: ${RATIOBOT_SYSTEM_PROMPT}]\n\nUser Question: ${userText}` }]
+      if (res.ok) {
+        const json = await res.json();
+        const candidate = json.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (candidate) return candidate.trim();
       }
-    ]
-  };
 
-  const fallbackRes = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(fallbackBody)
-  });
+      // If system_instruction wasn't supported by this model, try standard contents format
+      const fallbackBody = {
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: `[System Prompt: ${RATIOBOT_SYSTEM_PROMPT}]\n\nUser Question: ${userText}` }]
+          }
+        ]
+      };
 
-  if (fallbackRes.ok) {
-    const json = await fallbackRes.json();
-    const candidate = json.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (candidate) return candidate.trim();
+      const fallbackRes = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fallbackBody)
+      });
+
+      if (fallbackRes.ok) {
+        const json = await fallbackRes.json();
+        const candidate = json.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (candidate) return candidate.trim();
+      }
+
+      const errJson = await res.json().catch(() => ({}));
+      lastError = errJson.error?.message || `Google API error (Status ${res.status})`;
+    } catch (e) {
+      lastError = e.message;
+    }
   }
 
-  const errJson = await res.json().catch(() => ({}));
-  throw new Error(errJson.error?.message || `Google API error (Status ${res.status})`);
+  throw new Error(lastError || 'Failed to generate content with Gemini models');
 }
 
 async function handleSendMessage(e) {
@@ -1131,7 +1131,7 @@ async function handleSendMessage(e) {
     ? window.ENV.GEMINI_API_KEY.trim()
     : (localStorage.getItem('gemini_api_key') || '').trim();
 
-  // 2. Call live Gemini API directly from browser
+  // 2. Try direct browser Gemini API call first if key is present
   if (apiKey) {
     try {
       const liveReply = await callBrowserGeminiAPI(apiKey, text, STATE.chatHistory.slice(-8));
@@ -1141,17 +1141,11 @@ async function handleSendMessage(e) {
       persistCurrentSession();
       return;
     } catch (err) {
-      console.error("Live Gemini API Error:", err);
-      removeTypingIndicator();
-      const errorMsg = `⚠️ [Gemini AI Connection Error]: ${err.message}. Please check your API key in .env or static/config.js.`;
-      appendMessage('model', errorMsg);
-      STATE.chatHistory.push({ role: 'model', text: errorMsg });
-      persistCurrentSession();
-      return;
+      console.warn("Direct browser Gemini API failed, attempting /api/chat fallback:", err);
     }
   }
 
-  // 3. If running via local FastAPI backend server, try /api/chat
+  // 3. Fallback to local FastAPI backend server /api/chat
   try {
     const response = await fetch('/api/chat', {
       method: 'POST',
@@ -1172,12 +1166,18 @@ async function handleSendMessage(e) {
       return;
     } else {
       const errData = await response.json().catch(() => ({ detail: 'API request failed' }));
-      appendMessage('model', `⚠️ [Error]: ${errData.detail || 'API key missing in .env'}`);
+      const errorMsg = `⚠️ [Error]: ${errData.detail || 'API key missing in .env'}`;
+      appendMessage('model', errorMsg);
+      STATE.chatHistory.push({ role: 'model', text: errorMsg });
+      persistCurrentSession();
       return;
     }
   } catch (err) {
     removeTypingIndicator();
-    appendMessage('model', "⚠️ [API Key Required]: Please paste your GEMINI_API_KEY in the .env file or static/config.js to talk to the live AI!");
+    const errorMsg = "⚠️ [API Key Required]: Please paste your GEMINI_API_KEY in the .env file or click the Key button to talk to the live AI!";
+    appendMessage('model', errorMsg);
+    STATE.chatHistory.push({ role: 'model', text: errorMsg });
+    persistCurrentSession();
   }
 }
 

@@ -140,7 +140,22 @@ async def verify_captcha(payload: VerifyRequest):
             session_id=sess.session_id
         )
 
-    # STAGE 1 & STAGE 3: Check answer against expected
+    # STAGE 3+: Guaranteed rejection for terminal comedic effect
+    if curr_lvl >= 3:
+        sess = session_store.record_attempt(session_id, is_correct=False)
+        taunt = get_random_wrong_taunt()
+        return VerifyResponse(
+            correct=False,
+            current_level=curr_lvl,
+            next_level=curr_lvl,
+            message=taunt,
+            despair_score=sess.despair_score,
+            game_over=False,
+            is_terminal_level=True,
+            session_id=sess.session_id
+        )
+
+    # STAGE 1: Check answer against expected
     is_correct = False
     if expected is not None and user_input.upper() == expected.upper():
         is_correct = True
