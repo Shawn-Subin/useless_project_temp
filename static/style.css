@@ -946,3 +946,62 @@ body.in-chat-mode {
   20%, 60% { transform: translateX(-6px); }
   40%, 80% { transform: translateX(6px); }
 }
+
+/* ==========================================================================
+   ROAST MODE SELECTOR & TTS CONTROLS
+   ========================================================================== */
+.roast-mode-selector {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 3px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 3px;
+}
+
+.roast-mode-pill {
+  background: transparent;
+  border: none;
+  color: var(--gemini-text-muted);
+  padding: 5px 11px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.roast-mode-pill:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.roast-mode-pill.active {
+  background: linear-gradient(135deg, rgba(66, 133, 244, 0.25), rgba(155, 114, 203, 0.25));
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 0 12px rgba(66, 133, 244, 0.25);
+  border: 1px solid rgba(138, 180, 248, 0.4);
+}
+
+.tts-btn.tts-active {
+  background: rgba(52, 168, 83, 0.15);
+  border-color: rgba(52, 168, 83, 0.4);
+  color: #81c995;
+}
+
+.tts-btn.tts-speaking {
+  animation: ttsPulse 1.2s infinite alternate;
+}
+
+@keyframes ttsPulse {
+  0% { box-shadow: 0 0 4px rgba(52, 168, 83, 0.2); }
+  100% { box-shadow: 0 0 14px rgba(52, 168, 83, 0.6); }
+}
+
+.gemini-bubble {
+  position: relative;
+}
+

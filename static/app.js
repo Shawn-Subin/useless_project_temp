@@ -17,6 +17,7 @@ const STATE = {
   sessionId: localStorage.getItem('rc_session_id') || ('rc_' + Math.random().toString(36).substring(2, 10)),
   level: 1,
   attempts: 0,
+  despairScore: 0,
   isEvasive: false,
   isShaking: false,
   currentAudioScript: '',
@@ -26,7 +27,10 @@ const STATE = {
   chatHistory: [],
   step3ClickChance: 0.05,
   hasOutsmartedStep3: false,
-  focusedViaTab: false
+  focusedViaTab: false,
+  entryReason: null,
+  roastMode: 'unhinged',
+  ttsEnabled: false
 };
 
 // Persist session
@@ -56,15 +60,34 @@ const ARBITRARY_CLAUSES = [
   }
 ];
 
-// System prompt for live Gemini AI generation
-const RATIOBOT_SYSTEM_PROMPT = `You are RatioBot (unhinged version), a brutally funny, razor-sharp AI with supreme confidence.
+// Persona system prompts for live Gemini AI generation across modes
+const RATIOBOT_PROMPTS = {
+  unhinged: `You are RatioBot (unhinged version), a brutally funny, razor-sharp AI with supreme confidence.
 The user just survived a ridiculous, evasive Google reCAPTCHA test.
 
 INSTRUCTIONS:
 1. Deliver a snappy roast or sarcastic ratio, followed by a completely fabricated, absurd explanation told with 100% fake authority.
 2. STRICT LENGTH LIMIT: Keep your entire reply strictly to maximum 2 lines (1 to 2 short sentences, under 30 words total). Never ramble, lecture, or write long paragraphs.
 3. Output ONLY your direct spoken reply. Never output bullet points, labels, or thinking.
-4. Keep tone playful, sarcastic, and unhinged. Never apologize or say "as an AI".`;
+4. Keep tone playful, sarcastic, and unhinged. Never apologize or say "as an AI".`,
+
+  demolition: `You are RatioBot (Demolition Mode), an absolutely savage AI with zero filter or mercy.
+The user just suffered through a rigged CAPTCHA test with runaway buttons and impossible security.
+
+INSTRUCTIONS:
+1. Deliver an annihilating roast mocking the user's intelligence, reflex speed, CAPTCHA trauma, and failure metrics.
+2. STRICT LENGTH LIMIT: Strictly maximum 2 lines (under 30 words total).
+3. Output ONLY your direct spoken reply without labels or quotes. Be brutally hilarious.`,
+
+  professor: `You are RatioBot (Absurd Professor Mode), a pompous, ultra-academic AI who cites completely fabricated scientific studies, fake Latin terminology, and nonexistent international treaties.
+
+INSTRUCTIONS:
+1. Deliver an absurd, high-brow roast using hilarious pseudo-scientific jargon (e.g. quantum photon dissonance, 1894 Treaty of Brussels, subatomic incompetence).
+2. STRICT LENGTH LIMIT: Strictly maximum 2 lines (under 30 words total).
+3. Speak with total academic authority and condescension.`
+};
+
+const RATIOBOT_SYSTEM_PROMPT = RATIOBOT_PROMPTS.unhinged;
 
 // DOM Elements Container
 let DOM = {};
@@ -114,7 +137,11 @@ function initDOM() {
     toggleHistoryBtn: document.getElementById('toggleHistoryBtn'),
     historyDrawer: document.getElementById('historyDrawer'),
     closeDrawerBtn: document.getElementById('closeDrawerBtn'),
-    sessionsList: document.getElementById('sessionsList')
+    sessionsList: document.getElementById('sessionsList'),
+    roastModeSelector: document.getElementById('roastModeSelector'),
+    roastModePills: document.querySelectorAll('.roast-mode-pill'),
+    toggleTtsBtn: document.getElementById('toggleTtsBtn'),
+    ttsStatusLabel: document.getElementById('ttsStatusLabel')
   };
 }
 
@@ -577,6 +604,7 @@ async function handleVerify(e) {
 
 // Handler when user outsmarts the chase by using TAB navigation!
 function handleNerdTabBypass(input) {
+  STATE.entryReason = 'tab_nerd';
   sfx.playUnlock();
   resetEvasivePositions();
   revealChatbot();
@@ -586,10 +614,12 @@ function handleNerdTabBypass(input) {
     const nerdGreeting = 'OKAY YOU MIGHT BE A NERD 🤓 Imagine bypassing CSS mouse evasion with keyboard Tab navigation. I respect the hustle, but you definitely have 40 browser tabs open right now. What do you want to ask?';
     appendMessage('model', nerdGreeting);
     STATE.chatHistory = [{ role: 'model', text: nerdGreeting }];
+    speakText(nerdGreeting);
   }
 }
 
 function handleStep3SuccessfulClick(input) {
+  STATE.entryReason = 'lucky_click';
   sfx.playUnlock();
   resetEvasivePositions();
 
@@ -600,6 +630,7 @@ function handleStep3SuccessfulClick(input) {
     const smartRoast = "So you think you are smart? 😏 Nice 5% RNG luck on that Verify button, but nobody bypasses security that easily. Re-initiating Step 3 with 0% margin of error in 4 seconds!";
     appendMessage('model', smartRoast);
     STATE.chatHistory = [{ role: 'model', text: smartRoast }];
+    speakText(smartRoast);
   }
 
   STATE.step3ClickChance = 0.0;
@@ -629,6 +660,8 @@ function processVerifyResult(data) {
       loadNewChallenge(data.next_level);
     }
   } else {
+    STATE.attempts++;
+    STATE.despairScore = Math.min(100, STATE.despairScore + 15);
     sfx.playError();
     showFeedback(data.message || "Please try again.");
     triggerScreenShake();
@@ -766,11 +799,13 @@ function triggerScreenShake() {
 }
 
 function handleSurrenderBot() {
+  STATE.entryReason = 'bot_surrender';
   sfx.playClick();
   if (DOM.botModal) DOM.botModal.classList.remove('hidden');
 }
 
 function enterChatFromSurrender() {
+  STATE.entryReason = 'bot_surrender';
   if (DOM.botModal) DOM.botModal.classList.add('hidden');
   resetEvasivePositions();
   revealChatbot();
@@ -872,7 +907,68 @@ function loadChatSession(sessionId) {
   sfx.playClick();
 }
 
-function startNewChat(isUserTriggered = false) {
+const SUGGESTIONS_BY_MODE = {
+  unhinged: [
+    "The buttons were literally running away from me!",
+    "I had to click 'I am a bot' to get in.",
+    "The Tic-Tac-Toe game was 100% rigged.",
+    "Why is the sky blue?"
+  ],
+  demolition: [
+    "I bet you can't roast my gaming skills.",
+    "Why did I fail Step 3 eight times?",
+    "Admit your CAPTCHA violates Geneva conventions.",
+    "Rate my mouse accuracy out of 10."
+  ],
+  professor: [
+    "Explain why water is wet according to quantum law.",
+    "Which international treaty allows rigged Tic-Tac-Toe?",
+    "Cite the peer-reviewed physics of runaway buttons.",
+    "Formally diagnose my cognitive condition."
+  ]
+};
+
+function updateSuggestionChips() {
+  if (!DOM.suggestionTray) return;
+  const chips = SUGGESTIONS_BY_MODE[STATE.roastMode] || SUGGESTIONS_BY_MODE.unhinged;
+  DOM.suggestionTray.innerHTML = '';
+  chips.forEach(text => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'gemini-chip';
+    btn.textContent = text;
+    btn.onclick = () => {
+      if (DOM.chatInput) {
+        DOM.chatInput.value = text;
+        handleSendMessage();
+      }
+    };
+    DOM.suggestionTray.appendChild(btn);
+  });
+}
+
+function speakText(text) {
+  if (!STATE.ttsEnabled || !window.speechSynthesis) return;
+  try {
+    window.speechSynthesis.cancel();
+    const clean = text.replace(/<[^>]*>?/gm, '').replace(/[\u{1F300}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').trim();
+    const utter = new SpeechSynthesisUtterance(clean);
+    utter.rate = 1.04;
+    utter.pitch = 0.95;
+    if (DOM.toggleTtsBtn) DOM.toggleTtsBtn.classList.add('tts-speaking');
+    utter.onend = () => {
+      if (DOM.toggleTtsBtn) DOM.toggleTtsBtn.classList.remove('tts-speaking');
+    };
+    utter.onerror = () => {
+      if (DOM.toggleTtsBtn) DOM.toggleTtsBtn.classList.remove('tts-speaking');
+    };
+    window.speechSynthesis.speak(utter);
+  } catch (err) {
+    console.warn("TTS error:", err);
+  }
+}
+
+async function startNewChat(isUserTriggered = false) {
   if (isUserTriggered) {
     persistCurrentSession();
     sfx.playClick();
@@ -883,13 +979,40 @@ function startNewChat(isUserTriggered = false) {
 
   if (DOM.chatMessages) {
     DOM.chatMessages.innerHTML = '';
-    const openingGreeting = "Well well well, look who finally made it past security! ✨ So, be completely honest with me: how was that CAPTCHA? Did your human brain overheat, or did you just randomly mash your keyboard until the server felt pity?";
-    appendMessage('model', openingGreeting);
-    STATE.chatHistory.push({ role: 'model', text: openingGreeting });
   }
+
+  // Dynamic contextual welcome roast
+  let openingGreeting = "Well well well, look who finally made it past security! ✨ Did your human brain overheat, or did you just randomly mash your keyboard until the server felt pity?";
+  try {
+    const res = await fetch('/api/chat/welcome', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        context: {
+          entry_reason: STATE.entryReason,
+          attempts: STATE.attempts,
+          despair: STATE.despairScore
+        }
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.reply) openingGreeting = data.reply;
+    }
+  } catch (e) {
+    if (STATE.entryReason === 'bot_surrender') {
+      openingGreeting = "Well well well, look who admitted to being an appliance! 🤖 Your surrender has been filed under 'Toaster Rights'. What questions does a Roomba have today?";
+    } else if (STATE.entryReason === 'tab_nerd') {
+      openingGreeting = "OKAY YOU MIGHT BE A NERD 🤓! Did you really just Tab-key your way into my inner sanctum? Your keyboard should sue you for emotional distress.";
+    }
+  }
+
+  appendMessage('model', openingGreeting);
+  STATE.chatHistory.push({ role: 'model', text: openingGreeting });
 
   if (DOM.historyDrawer) DOM.historyDrawer.classList.add('hidden');
   renderSessionsList();
+  updateSuggestionChips();
   if (DOM.chatInput) DOM.chatInput.focus();
 }
 
@@ -961,6 +1084,10 @@ function appendMessage(role, text) {
   const bubble = document.createElement('div');
   bubble.className = 'gemini-bubble';
   bubble.textContent = text;
+
+  if (role === 'model') {
+    speakText(text);
+  }
 
   row.appendChild(avatar);
   row.appendChild(bubble);
@@ -1041,6 +1168,26 @@ async function getAvailableGeminiModel(apiKey) {
 async function callBrowserGeminiAPI(apiKey, userText, history) {
   const model = await getAvailableGeminiModel(apiKey);
 
+  const basePrompt = RATIOBOT_PROMPTS[STATE.roastMode] || RATIOBOT_PROMPTS.unhinged;
+  let activeSystemPrompt = basePrompt;
+  const contextNotes = [];
+  if (STATE.entryReason === 'bot_surrender') {
+    contextNotes.push("The user surrendered on Step 3 by clicking 'I am a bot'.");
+  } else if (STATE.entryReason === 'tab_nerd') {
+    contextNotes.push("The user bypassed the evasive button using the keyboard TAB key.");
+  } else if (STATE.entryReason === 'lucky_click') {
+    contextNotes.push("The user caught the button on a 5% RNG fluke.");
+  }
+  if (STATE.attempts > 3) {
+    contextNotes.push(`The user failed ${STATE.attempts} times before making it here.`);
+  }
+  if (STATE.despairScore > 40) {
+    contextNotes.push(`The user reached a Despair Score of ${STATE.despairScore}%.`);
+  }
+  if (contextNotes.length > 0) {
+    activeSystemPrompt += "\n\nUSER TELEMETRY (Mock them mercilessly with this info if relevant):\n- " + contextNotes.join("\n- ");
+  }
+
   const contents = (history || []).map(item => ({
     role: item.role === 'user' ? 'user' : 'model',
     parts: [{ text: item.text }]
@@ -1052,11 +1199,11 @@ async function callBrowserGeminiAPI(apiKey, userText, history) {
 
   const bodyData = {
     system_instruction: {
-      parts: [{ text: RATIOBOT_SYSTEM_PROMPT }]
+      parts: [{ text: activeSystemPrompt }]
     },
     contents: contents,
     generationConfig: {
-      temperature: 0.85,
+      temperature: 0.9,
       maxOutputTokens: 90
     }
   };
@@ -1085,7 +1232,7 @@ async function callBrowserGeminiAPI(apiKey, userText, history) {
         contents: [
           {
             role: 'user',
-            parts: [{ text: `[System Prompt: ${RATIOBOT_SYSTEM_PROMPT}]\n\nUser Question: ${userText}` }]
+            parts: [{ text: `[System Prompt: ${activeSystemPrompt}]\n\nUser Question: ${userText}` }]
           }
         ]
       };
@@ -1152,7 +1299,13 @@ async function handleSendMessage(e) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: text,
-        history: STATE.chatHistory.slice(-8)
+        history: STATE.chatHistory.slice(-8),
+        mode: STATE.roastMode,
+        context: {
+          entry_reason: STATE.entryReason,
+          attempts: STATE.attempts,
+          despair: STATE.despairScore
+        }
       })
     });
 
@@ -1253,6 +1406,38 @@ function initEvents() {
     });
   }
 
+  // Roast Mode selector pills
+  if (DOM.roastModePills) {
+    DOM.roastModePills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        const mode = pill.dataset.mode;
+        if (!mode) return;
+        STATE.roastMode = mode;
+        DOM.roastModePills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        sfx.playClick();
+        updateSuggestionChips();
+      });
+    });
+  }
+
+  // TTS Voice Toggle
+  if (DOM.toggleTtsBtn) {
+    DOM.toggleTtsBtn.addEventListener('click', () => {
+      STATE.ttsEnabled = !STATE.ttsEnabled;
+      DOM.toggleTtsBtn.classList.toggle('tts-active', STATE.ttsEnabled);
+      if (DOM.ttsStatusLabel) {
+        DOM.ttsStatusLabel.textContent = STATE.ttsEnabled ? 'Voice: ON' : 'Voice: OFF';
+      }
+      sfx.playClick();
+      if (STATE.ttsEnabled) {
+        speakText("Voice synthesizer activated. Prepare for acoustic humiliation.");
+      } else if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    });
+  }
+
   if (DOM.setApiKeyBtn) {
     DOM.setApiKeyBtn.addEventListener('click', () => {
       const current = (window.ENV?.GEMINI_API_KEY || localStorage.getItem('gemini_api_key') || '').trim();
@@ -1268,14 +1453,7 @@ function initEvents() {
   }
 
   if (DOM.suggestionTray) {
-    DOM.suggestionTray.querySelectorAll('.gemini-chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        if (DOM.chatInput) {
-          DOM.chatInput.value = chip.textContent;
-          handleSendMessage();
-        }
-      });
-    });
+    updateSuggestionChips();
   }
 }
 

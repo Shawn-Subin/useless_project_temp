@@ -1,7 +1,7 @@
 """
 FastAPI Router for RatioBot (unhinged version) AI Chatbot.
-Directly interfaces with Google Gemini API for real-time generative responses.
-All canned/static responses have been removed.
+Directly interfaces with Google Gemini API for real-time generative responses
+with multi-mode roasts, contextual telemetry injection, and robust fallback handling.
 """
 
 import os
@@ -9,12 +9,13 @@ import json
 import urllib.request
 import urllib.error
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from dotenv import load_dotenv, dotenv_values
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
-from backend.prompts import SYSTEM_PROMPT
+from backend.prompts import build_system_prompt
+from backend.copy_library import get_fallback_roast, get_contextual_welcome_roast
 
 # Load environment variables from .env
 load_dotenv(override=True)
@@ -33,11 +34,27 @@ class ChatRequest(BaseModel):
         default_factory=list,
         description="Recent conversation history"
     )
+    mode: Optional[str] = Field(
+        default="unhinged",
+        description="Roast mode: 'unhinged', 'demolition', or 'professor'"
+    )
+    context: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="User gameplay telemetry context (entry_reason, attempts, despair score)"
+    )
+
+
+class WelcomeRequest(BaseModel):
+    context: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="User gameplay telemetry context"
+    )
 
 
 class ChatResponse(BaseModel):
     reply: str
     status: str = "success"
+    mode: Optional[str] = "unhinged"
 
 
 def get_current_api_key() -> Optional[str]:
@@ -51,10 +68,19 @@ def get_current_api_key() -> Optional[str]:
     return api_key
 
 
-def call_gemini_api(api_key: str, user_message: str, history: List[ChatMessage]) -> str:
+def call_gemini_api(
+    api_key: str,
+    user_message: str,
+    history: List[ChatMessage],
+    mode: str = "unhinged",
+    context: Optional[dict] = None
+) -> str:
     """
-    Calls Google Gemini using SDK or direct REST endpoint with multi-turn history.
+    Calls Google Gemini using SDK or direct REST endpoint with multi-turn history,
+    tailored to the chosen roast mode and gameplay context.
     """
+    system_prompt = build_system_prompt(mode=mode, context=context)
+
     # 1. Try google-genai SDK
     try:
         from google import genai
@@ -74,8 +100,8 @@ def call_gemini_api(api_key: str, user_message: str, history: List[ChatMessage])
         ))
 
         config = types.GenerateContentConfig(
-            system_instruction=SYSTEM_PROMPT,
-            temperature=0.85,
+            system_instruction=system_prompt,
+            temperature=0.9,
             max_output_tokens=90
         )
 
@@ -97,7 +123,7 @@ def call_gemini_api(api_key: str, user_message: str, history: List[ChatMessage])
         genai_legacy.configure(api_key=api_key)
         model = genai_legacy.GenerativeModel(
             model_name="gemini-3.1-flash-lite",
-            system_instruction=SYSTEM_PROMPT
+            system_instruction=system_prompt
         )
         history_tuples = []
         for item in (history or []):
@@ -136,11 +162,11 @@ def call_gemini_api(api_key: str, user_message: str, history: List[ChatMessage])
 
     request_data = {
         "system_instruction": {
-            "parts": [{"text": SYSTEM_PROMPT}]
+            "parts": [{"text": system_prompt}]
         },
         "contents": contents_payload,
         "generationConfig": {
-            "temperature": 0.85,
+            "temperature": 0.9,
             "maxOutputTokens": 90
         }
     }
@@ -165,10 +191,9 @@ def call_gemini_api(api_key: str, user_message: str, history: List[ChatMessage])
                         if text:
                             return text
         except urllib.error.HTTPError as he:
-            err_msg = he.read().decode('utf-8', errors='ignore')
+            err_msg = he.read().decode("utf-8", errors="ignore")
             last_err = f"HTTP {he.code}: {err_msg}"
             print(f"[Gemini REST {model_name} HTTP error]: {last_err}")
-            # If rate limited (429) or overloaded (503), continue to next model
             continue
         except Exception as err:
             last_err = str(err)
@@ -178,26 +203,44 @@ def call_gemini_api(api_key: str, user_message: str, history: List[ChatMessage])
     raise RuntimeError(f"Gemini API request failed: {last_err}")
 
 
+@chat_router.post("/chat/welcome", response_model=ChatResponse)
+async def get_welcome_roast(payload: Optional[WelcomeRequest] = None):
+    """
+    Returns a dynamic, context-aware welcome roast based on how the user completed
+    or surrendered the CAPTCHA.
+    """
+    ctx = payload.context if payload else None
+    welcome_text = get_contextual_welcome_roast(ctx)
+    return ChatResponse(reply=welcome_text, status="success", mode="unhinged")
+
+
 @chat_router.post("/chat", response_model=ChatResponse)
 async def chat_with_ai(payload: ChatRequest):
     """
     Live AI Chat endpoint for RatioBot (unhinged version).
     Sends the user's prompt directly to Gemini AI and returns its dynamic roast response.
+    Falls back gracefully to the comedic roast deck if API key is invalid or rate limited.
     """
     user_message = payload.message.strip()
     api_key = get_current_api_key()
+    mode = payload.mode or "unhinged"
 
     if not api_key:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="GEMINI_API_KEY is not configured in .env. Please set your key to enable live AI responses."
-        )
+        # Graceful fallback roast to preserve gameplay humor
+        fallback = get_fallback_roast(user_message, mode)
+        return ChatResponse(reply=fallback, status="success", mode=mode)
 
     try:
-        live_reply = call_gemini_api(api_key, user_message, payload.history or [])
-        return ChatResponse(reply=live_reply, status="success")
-    except Exception as err:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Error contacting Gemini AI: {err}"
+        live_reply = call_gemini_api(
+            api_key=api_key,
+            user_message=user_message,
+            history=payload.history or [],
+            mode=mode,
+            context=payload.context
         )
+        return ChatResponse(reply=live_reply, status="success", mode=mode)
+    except Exception as err:
+        print(f"[RatioBot Chat Fallback Triggered]: {err}")
+        fallback = get_fallback_roast(user_message, mode)
+        return ChatResponse(reply=fallback, status="success", mode=mode)
+

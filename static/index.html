@@ -185,11 +185,26 @@
             </svg>
           </div>
           <div class="gemini-title-group">
-            <span class="gemini-title">RatioBot <sub class="gold-subscript">(unhinged version)</sub></span>
+            <span class="gemini-title">RatioBot</span>
           </div>
         </div>
 
         <div class="gemini-header-controls">
+          <!-- Roast Mode Selector -->
+          <div class="roast-mode-selector" id="roastModeSelector">
+            <button type="button" class="roast-mode-pill active" data-mode="unhinged" title="Chaotic burns & absurd fake facts">🔥 Unhinged</button>
+            <button type="button" class="roast-mode-pill" data-mode="demolition" title="Maximum savage roast on your CAPTCHA trauma">💀 Demolition</button>
+            <button type="button" class="roast-mode-pill" data-mode="professor" title="Absurd pseudo-science & nonexistent treaties">🎓 Professor</button>
+          </div>
+
+          <!-- Text-to-Speech Voice Toggle -->
+          <button type="button" id="toggleTtsBtn" class="gemini-pill-btn tts-btn" title="Toggle deadpan voice readouts">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+            </svg>
+            <span id="ttsStatusLabel">Voice: OFF</span>
+          </button>
+
           <!-- New Chat Button -->
           <button type="button" id="newChatBtn" class="gemini-pill-btn gemini-btn-new-chat"
             title="Start a fresh conversation">
@@ -198,7 +213,6 @@
             </svg>
             <span>New chat</span>
           </button>
-
 
           <button type="button" id="relockCaptchaBtn" class="gemini-pill-btn" title="Re-lock with CAPTCHA">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
@@ -260,8 +274,8 @@
     </div>
   </div>
 
-  <script src="config.js?v=20260904_2"></script>
-  <script src="app.js?v=20260904_2"></script>
+  <script src="config.js?v=20260904_3"></script>
+  <script src="app.js?v=20260904_3"></script>
 </body>
 
 </html>
