@@ -105,11 +105,11 @@ def call_gemini_api(
         config = types.GenerateContentConfig(
             system_instruction=system_prompt,
             temperature=0.9,
-            max_output_tokens=150
+            max_output_tokens=100
         )
 
         response = client.models.generate_content(
-            model="gemini-3.6-flash",
+            model="gemini-3.1-flash-lite",
             contents=contents,
             config=config
         )
@@ -125,7 +125,7 @@ def call_gemini_api(
         import google.generativeai as genai_legacy
         genai_legacy.configure(api_key=api_key)
         model = genai_legacy.GenerativeModel(
-            model_name="gemini-3.6-flash",
+            model_name="gemini-3.1-flash-lite",
             system_instruction=system_prompt
         )
         history_tuples = []
@@ -144,10 +144,8 @@ def call_gemini_api(
 
     # 3. Direct REST API Call with priority models
     models_to_try = [
-        "gemini-3.6-flash",
-        "gemini-2.5-flash",
-        "gemini-2.0-flash",
-        "gemini-1.5-flash"
+        "gemini-3.1-flash-lite",
+        "gemini-3.1-flash-lite-preview"
     ]
     last_err = None
 
