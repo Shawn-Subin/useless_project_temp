@@ -105,6 +105,36 @@ pytest
 
 ---
 
+## CAPTCHA Development
+
+The journey of designing our verification challenges went through multiple iterations. At first, we went a bit too complicated with sprawling mechanics and heavy UI elements before simplifying it down to deceptive, punchy realism:
+
+### 1. Initial Concept — Cyberpunk Terminal (6 Stages)
+Our earliest concept began with an intense dark-mode sci-fi intake gate featuring 6 planned escalation levels, biological latency tracking, and futuristic glowing HUD elements running directly in the browser.
+
+![Initial Cyberpunk Prototype](assets/captcha-v1-initial.png)
+*Initial prototype featuring 6 levels and a dark terminal aesthetic.*
+
+---
+
+### 2. Over-Complication Phase — The Bureaucratic RPG Overload
+At first, we got carried away and went a bit too complicated. We expanded the system into the *"Federal Bureau of Robot Denial (Form 27-C)"*, introducing an elaborate RPG-like system complete with Heat-Point multipliers, Cognitive Ranks (*Chief Consciousness Officer*), Despair Quotients, achievement medals, and even in-game power-up abilities (*Enhance*, *Stun UI*, *Reroll Specimen*). While fun on paper, the sheer HUD clutter and mechanical noise distracted from the core comedic punchline.
+
+![Over-Complicated Bureaucracy Phase](assets/captcha-v2-bureaucracy.png)
+*The over-engineered bureaucratic HUD with cognitive ranks, heat points, and power-up buttons.*
+
+---
+
+### 3. Simplified & Refined — Deceptive reCAPTCHA Realism
+We realized that simplicity delivered far higher comedic value. We stripped away the bloated RPG mechanics and simplified the interface into a pixel-faithful recreation of the classic Google reCAPTCHA v2 modal.
+
+By presenting a clean, familiar, and seemingly standard verification widget (*"Select all squares with letters"*, authentic blue header, and recognizable utility icons), the user enters with their guard completely lowered. This makes the subsequent sudden breakdown—shifting into rigged Tic-Tac-Toe, physics-based runaway buttons, and RatioBot's merciless roasts—exponentially funnier and more effective.
+
+![Final Simplified reCAPTCHA](assets/captcha-v3-simplified.png)
+*The simplified, hyper-realistic reCAPTCHA disguise that lures users into a false sense of security.*
+
+---
+
 ## Project Documentation
 
 ### Screenshots
