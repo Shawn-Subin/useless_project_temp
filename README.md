@@ -19,7 +19,7 @@ A satirical mini-game where the user attempts to solve a CAPTCHA that gets progr
 - Member 2: [Cilen George Anil] - [Muthoot Institute of Technology and Science]
 
 ### Project Description
-A dystopian security verification gateway featuring elusive, dodging buttons, an interactive rigged Tic-Tac-Toe minigame, and an impossible CAPTCHA that forces you to admit you are a bot — unlocking **RatioBot (unhinged version)**, an AI that roasts user questions with fabricated, hilarious explanations powered by Gemini.
+A dystopian security verification gateway featuring elusive, dodging buttons, an interactive rigged Tic-Tac-Toe minigame, and an impossible CAPTCHA that forces you to admit you are a bot — unlocking **RatioBot **, an AI that roasts user questions with fabricated, hilarious explanations powered by Gemini.
 
 ### The Problem (that doesn't exist)
 Websites are far too easy to log into, and artificial intelligences are far too polite, respectful, and helpful. Society desperately needs an antagonistic bureaucracy to humble human egos and test finger reflexes.
