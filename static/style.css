@@ -198,11 +198,95 @@ body.in-chat-mode {
   text-align: center;
 }
 
+.rc-ttt-arena {
+  position: relative;
+  padding: 68px 50px 30px 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
 .rc-ttt-grid {
   display: grid;
   grid-template-columns: repeat(3, 75px);
   grid-template-rows: repeat(3, 60px);
   gap: 4px;
+  background: #e2e8f0;
+  border: 2px solid #94a3b8;
+  border-radius: 4px;
+  padding: 4px;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.rc-ttt-outside-cell {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 75px;
+  height: 60px;
+  background: rgba(254, 235, 235, 0.95);
+  border: 2px dashed var(--rc-error);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(234, 67, 53, 0.35);
+  animation: rcOutsideDrop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 10;
+}
+
+.rc-ttt-outside-cell .outside-mark {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--rc-error);
+  line-height: 1;
+}
+
+.rc-ttt-outside-cell .outside-badge {
+  font-size: 8px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--rc-error);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  margin-top: 2px;
+}
+
+@keyframes rcOutsideDrop {
+  0% { transform: translate(-50%, -50%) scale(0.2) rotate(-15deg); opacity: 0; }
+  70% { transform: translate(-50%, -50%) scale(1.15) rotate(5deg); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+}
+
+.rc-ttt-win-line-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 15;
+}
+
+.rc-ttt-win-line-svg line {
+  stroke: var(--rc-error);
+  stroke-width: 5;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 6px rgba(234, 67, 53, 0.8));
+  stroke-dasharray: 500;
+  stroke-dashoffset: 500;
+  animation: rcDrawLine 0.4s ease forwards;
+}
+
+@keyframes rcDrawLine {
+  to { stroke-dashoffset: 0; }
 }
 
 .rc-ttt-cell {

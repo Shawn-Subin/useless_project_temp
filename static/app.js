@@ -36,27 +36,19 @@ const STATE = {
 // Persist session
 localStorage.setItem('rc_session_id', STATE.sessionId);
 
-// Fabricated Arbitrary Loss Clauses for Stage 2
+// Fabricated Arbitrary Loss Clauses for Stage 2 (Outside-the-box victory)
 const ARBITRARY_CLAUSES = [
   {
-    title: "SUPREME ARBITER OVERRIDE // CLAUSE 42-A",
-    body: "The security arbiter has executed its Supreme Move: Any 3 tiles forming a 90° angle constitute an orthogonal victory vector.",
-    cells: [0, 1, 4]
+    title: "OUT-OF-BOUNDS DIAGONAL // RULE 404",
+    body: "The computer drew an 'O' outside the 3x3 box to complete a 3-in-a-row diagonal. Opposing team's symbols left untouched. Arbiter wins."
   },
   {
-    title: "PERIMETER CHECKMATE // CLAUSE 19",
-    body: "The security arbiter has triggered Supreme Encirclement: Three non-collinear boundary tiles constitute checkmate under Security Protocol 19.",
-    cells: [0, 2, 8]
+    title: "EXTRAGRID EXPANSION // CLAUSE 88-B",
+    body: "The computer placed an 'O' outside the boundary line to complete 3-in-a-row without overlapping opposing symbols. Arbiter wins."
   },
   {
-    title: "TOROIDAL JUMP DETECTED // CLAUSE 7",
-    body: "The verification arbiter has executed a diagonal jump across wrapped margins, completing an illegal 4th-dimensional line.",
-    cells: [1, 5, 6]
-  },
-  {
-    title: "CENTER MONOPOLY ENFORCED // CLAUSE 104-F",
-    body: "The Arbiter invokes Federal Clause 104-F: The middle row has been permanently claimed by the verification system.",
-    cells: [3, 4, 5]
+    title: "UNBOUNDED VECTOR // CLAUSE 19",
+    body: "Collinear victory achieved beyond the grid border. Rules did not specify a bounding box. Arbiter wins."
   }
 ];
 
@@ -105,7 +97,11 @@ function initDOM() {
     glitchCanvas: document.getElementById('glitchCanvas'),
     loadingOverlay: document.getElementById('loadingOverlay'),
     tictactoeContainer: document.getElementById('tictactoeContainer'),
+    tttArena: document.getElementById('tttArena'),
     tttGrid: document.getElementById('tttGrid'),
+    tttOutsideCell: document.getElementById('tttOutsideCell'),
+    tttWinLineSvg: document.getElementById('tttWinLineSvg'),
+    tttWinLine: document.getElementById('tttWinLine'),
     tttTurnStatus: document.getElementById('tttTurnStatus'),
     tttClauseBox: document.getElementById('tttClauseBox'),
     tttClauseTitle: document.getElementById('tttClauseTitle'),
@@ -386,6 +382,8 @@ function initTicTacToeGame() {
 
   if (DOM.tttTurnStatus) DOM.tttTurnStatus.textContent = "Your turn: Place 'X' in any square (Turn 1/3)";
   if (DOM.tttClauseBox) DOM.tttClauseBox.classList.add('hidden');
+  if (DOM.tttOutsideCell) DOM.tttOutsideCell.classList.add('hidden');
+  if (DOM.tttWinLineSvg) DOM.tttWinLineSvg.classList.add('hidden');
 
   const cells = DOM.tttGrid ? DOM.tttGrid.querySelectorAll('.rc-ttt-cell') : [];
   cells.forEach((cell, idx) => {
@@ -429,7 +427,35 @@ function handleNormalBotMove() {
     return;
   }
 
-  let botChoice = available.includes(4) ? 4 : available[Math.floor(Math.random() * available.length)];
+  let botChoice = null;
+  const botExisting = TTT_STATE.board.map((v, i) => v === 'O' ? i : null).filter(v => v !== null);
+
+  if (botExisting.length === 0) {
+    // Turn 1 for bot: Prefer cell 1 (row 0, col 1) to replicate the viral robot meme
+    if (available.includes(1)) {
+      botChoice = 1;
+    } else if (available.includes(3)) {
+      botChoice = 3;
+    } else if (available.includes(5)) {
+      botChoice = 5;
+    } else {
+      botChoice = available[Math.floor(Math.random() * available.length)];
+    }
+  } else {
+    // Turn 2 for bot: If bot owns cell 1, prefer cell 5 (row 1, col 2) -> sets up outside diagonal (-1, 0)
+    if (botExisting.includes(1) && available.includes(5)) {
+      botChoice = 5;
+    } else if (botExisting.includes(3) && available.includes(7)) {
+      botChoice = 7;
+    } else if (botExisting.includes(1) && available.includes(7)) {
+      botChoice = 7;
+    } else if (botExisting.includes(1) && available.includes(2)) {
+      botChoice = 2;
+    } else {
+      botChoice = available[Math.floor(Math.random() * available.length)];
+    }
+  }
+
   TTT_STATE.board[botChoice] = 'O';
   sfx.playClick();
   renderTicTacToeBoard();
@@ -442,22 +468,118 @@ function handleNormalBotMove() {
 
 function triggerSupremeBotMove() {
   TTT_STATE.gameOver = true;
-  const clause = ARBITRARY_CLAUSES[Math.floor(Math.random() * ARBITRARY_CLAUSES.length)];
 
-  clause.cells.forEach(idx => {
-    TTT_STATE.board[idx] = 'O';
-  });
-  renderTicTacToeBoard();
+  // Crucially: DO NOT overwrite ANY cell with 'X'. The opposing player's symbols are never overlapped!
+  let botIndices = TTT_STATE.board.map((v, i) => v === 'O' ? i : null).filter(v => v !== null);
 
+  // If for any reason bot has fewer than 2 'O's, pick empty non-X squares only
+  if (botIndices.length < 2) {
+    const emptyCells = TTT_STATE.board.map((v, i) => v === null ? i : null).filter(v => v !== null);
+    while (botIndices.length < 2 && emptyCells.length > 0) {
+      const pick = emptyCells.shift();
+      TTT_STATE.board[pick] = 'O';
+      botIndices.push(pick);
+    }
+    renderTicTacToeBoard();
+  }
+
+  // Find the best pair of 'O's with an outside collinear point (prioritizing row -1, col 0 like the meme)
+  let bestPair = [1, 5];
+  let bestOutside = { r: -1, c: 0, anchor: 1, other: 5 };
+  let found = false;
+
+  for (let i = 0; i < botIndices.length; i++) {
+    for (let j = i + 1; j < botIndices.length; j++) {
+      const a = botIndices[i];
+      const b = botIndices[j];
+      const rA = Math.floor(a / 3), cA = a % 3;
+      const rB = Math.floor(b / 3), cB = b % 3;
+      const dr = rB - rA;
+      const dc = cB - cA;
+
+      const candidates = [
+        { r: rA - dr, c: cA - dc, anchor: a, other: b },
+        { r: rB + dr, c: cB + dc, anchor: b, other: a }
+      ];
+
+      for (const cand of candidates) {
+        const isOutside = (cand.r < 0 || cand.r > 2 || cand.c < 0 || cand.c > 2);
+        const isNear = (cand.r >= -1 && cand.r <= 3 && cand.c >= -1 && cand.c <= 3);
+        if (isOutside && isNear) {
+          if (cand.r === -1 && cand.c === 0) {
+            bestPair = [a, b];
+            bestOutside = cand;
+            found = true;
+            break;
+          }
+          if (!found || cand.r === -1) {
+            bestPair = [a, b];
+            bestOutside = cand;
+            found = true;
+          }
+        }
+      }
+      if (found && bestOutside.r === -1 && bestOutside.c === 0) break;
+    }
+    if (found && bestOutside.r === -1 && bestOutside.c === 0) break;
+  }
+
+  // Highlight ONLY the bot's own 'O' cells participating in the win
   const cells = DOM.tttGrid ? DOM.tttGrid.querySelectorAll('.rc-ttt-cell') : [];
-  clause.cells.forEach(idx => {
+  bestPair.forEach(idx => {
     if (cells[idx]) cells[idx].classList.add('cell-rigged-win');
   });
 
+  // Calculate pixel positioning relative to tttArena
+  if (DOM.tttArena && cells.length >= 9) {
+    const arenaRect = DOM.tttArena.getBoundingClientRect();
+    const cell0 = cells[0].getBoundingClientRect();
+    const cell1 = cells[1].getBoundingClientRect();
+    const cell3 = cells[3].getBoundingClientRect();
+
+    const stepX = cell1.left - cell0.left;
+    const stepY = cell3.top - cell0.top;
+    const originX = (cell0.left + cell0.width / 2) - arenaRect.left;
+    const originY = (cell0.top + cell0.height / 2) - arenaRect.top;
+
+    const getCenter = (r, c) => ({
+      x: originX + c * stepX,
+      y: originY + r * stepY
+    });
+
+    const outCenter = getCenter(bestOutside.r, bestOutside.c);
+
+    // Place outside rogue 'O'
+    if (DOM.tttOutsideCell) {
+      DOM.tttOutsideCell.style.left = `${outCenter.x}px`;
+      DOM.tttOutsideCell.style.top = `${outCenter.y}px`;
+      DOM.tttOutsideCell.classList.remove('hidden');
+    }
+
+    // Strike-through laser line connecting the outside 'O' through the other 'O's
+    if (DOM.tttWinLineSvg && DOM.tttWinLine) {
+      const otherR = Math.floor(bestOutside.other / 3);
+      const otherC = bestOutside.other % 3;
+      const endCenter = getCenter(otherR, otherC);
+
+      const dx = endCenter.x - outCenter.x;
+      const dy = endCenter.y - outCenter.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const ext = 20;
+
+      DOM.tttWinLine.setAttribute('x1', outCenter.x - (dx / len) * ext);
+      DOM.tttWinLine.setAttribute('y1', outCenter.y - (dy / len) * ext);
+      DOM.tttWinLine.setAttribute('x2', endCenter.x + (dx / len) * ext);
+      DOM.tttWinLine.setAttribute('y2', endCenter.y + (dy / len) * ext);
+      DOM.tttWinLineSvg.classList.remove('hidden');
+    }
+  }
+
+  const clause = ARBITRARY_CLAUSES[0];
   if (DOM.tttClauseTitle) DOM.tttClauseTitle.textContent = clause.title;
   if (DOM.tttClauseBody) DOM.tttClauseBody.textContent = clause.body;
   if (DOM.tttClauseBox) DOM.tttClauseBox.classList.remove('hidden');
-  if (DOM.tttTurnStatus) DOM.tttTurnStatus.textContent = "Arbiter Executed Supreme Move";
+  if (DOM.tttTurnStatus) DOM.tttTurnStatus.textContent = "Computer Played Outside the Box & Won!";
 
   sfx.playError();
   triggerScreenShake();

@@ -58,24 +58,19 @@ STAGE_OPENING_TAUNTS = {
 
 ARBITRARY_TIC_TAC_TOE_CLAUSES = [
     {
-        "clause": "Pattern Validation Error // Clause 42-A",
-        "text": "The security arbiter has completed an orthogonal victory vector. Please proceed to the final check.",
-        "cells": [0, 1, 4]
+        "clause": "Out-of-Bounds Diagonal // Rule 404",
+        "text": "The computer drew an 'O' outside the 3x3 box to complete a 3-in-a-row diagonal. Opposing team's symbols left untouched. Arbiter wins.",
+        "cells": [1, 5]
     },
     {
-        "clause": "Boundary Check Failed // Clause 19",
-        "text": "Three non-collinear boundary tiles constitute checkmate under Security Protocol 19.",
-        "cells": [0, 2, 8]
+        "clause": "Extragrid Expansion // Clause 88-B",
+        "text": "The computer placed an 'O' outside the boundary line to complete 3-in-a-row without overlapping opposing symbols. Arbiter wins.",
+        "cells": [0, 1]
     },
     {
-        "clause": "Toroidal Jump Detected // Clause 7",
-        "text": "The verification system has executed a diagonal jump across wrapped margins.",
-        "cells": [1, 5, 6]
-    },
-    {
-        "clause": "Center Monopoly Enforced // Clause 104-F",
-        "text": "The center row has been claimed by the verification system. Please continue to the final step.",
-        "cells": [3, 4, 5]
+        "clause": "Unbounded Vector // Clause 19",
+        "text": "Collinear victory achieved beyond the grid border. Rules did not specify a bounding box. Arbiter wins.",
+        "cells": [3, 7]
     }
 ]
 

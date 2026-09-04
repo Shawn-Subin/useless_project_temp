@@ -13,7 +13,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260904">
+  <link rel="stylesheet" href="style.css?v=20260904_5">
 </head>
 
 <body>
@@ -53,23 +53,35 @@
             <span id="tttTurnStatus">Your turn: Place 'X' in any empty square</span>
           </div>
 
-          <div class="rc-ttt-grid" id="tttGrid">
-            <button type="button" class="rc-ttt-cell" data-index="0"></button>
-            <button type="button" class="rc-ttt-cell" data-index="1"></button>
-            <button type="button" class="rc-ttt-cell" data-index="2"></button>
-            <button type="button" class="rc-ttt-cell" data-index="3"></button>
-            <button type="button" class="rc-ttt-cell" data-index="4"></button>
-            <button type="button" class="rc-ttt-cell" data-index="5"></button>
-            <button type="button" class="rc-ttt-cell" data-index="6"></button>
-            <button type="button" class="rc-ttt-cell" data-index="7"></button>
-            <button type="button" class="rc-ttt-cell" data-index="8"></button>
+          <div class="rc-ttt-arena" id="tttArena">
+            <div class="rc-ttt-grid" id="tttGrid">
+              <button type="button" class="rc-ttt-cell" data-index="0"></button>
+              <button type="button" class="rc-ttt-cell" data-index="1"></button>
+              <button type="button" class="rc-ttt-cell" data-index="2"></button>
+              <button type="button" class="rc-ttt-cell" data-index="3"></button>
+              <button type="button" class="rc-ttt-cell" data-index="4"></button>
+              <button type="button" class="rc-ttt-cell" data-index="5"></button>
+              <button type="button" class="rc-ttt-cell" data-index="6"></button>
+              <button type="button" class="rc-ttt-cell" data-index="7"></button>
+              <button type="button" class="rc-ttt-cell" data-index="8"></button>
+            </div>
+
+            <!-- Rogue outside-the-box cell spawned by the computer -->
+            <div id="tttOutsideCell" class="rc-ttt-outside-cell hidden">
+              <span class="outside-mark">O</span>
+              <span class="outside-badge">OUTSIDE BOX</span>
+            </div>
+
+            <!-- SVG winning strike line across inside & outside box -->
+            <svg id="tttWinLineSvg" class="rc-ttt-win-line-svg hidden">
+              <line id="tttWinLine" x1="0" y1="0" x2="0" y2="0" />
+            </svg>
           </div>
 
           <!-- Arbitrary Loss Banner -->
           <div id="tttClauseBox" class="rc-clause-box hidden">
-            <div class="rc-clause-title" id="tttClauseTitle">SUPREME ARBITER OVERRIDE // CLAUSE 42-A</div>
-            <div class="rc-clause-text" id="tttClauseBody">The security arbiter has executed its Supreme Move. Please
-              proceed to the final check.</div>
+            <div class="rc-clause-title" id="tttClauseTitle">OUT-OF-BOUNDS DIAGONAL // RULE 404</div>
+            <div class="rc-clause-text" id="tttClauseBody">The computer drew an 'O' outside the 3x3 box to complete a 3-in-a-row diagonal. Opposing team's symbols left untouched. Arbiter wins.</div>
             <button type="button" id="tttProceedBtn" class="rc-btn rc-btn-primary rc-proceed-btn">
               <span>Continue to Step 3 ➔</span>
             </button>
@@ -274,8 +286,8 @@
     </div>
   </div>
 
-  <script src="config.js?v=20260904_3"></script>
-  <script src="app.js?v=20260904_3"></script>
+  <script src="config.js?v=20260904_5"></script>
+  <script src="app.js?v=20260904_5"></script>
 </body>
 
 </html>
