@@ -1250,11 +1250,10 @@ async function getAvailableGeminiModel(apiKey) {
   if (cachedGeminiModel) return cachedGeminiModel;
 
   const preferred = [
-    'gemini-3.1-flash-lite',
-    'gemini-3.1-flash-lite-preview',
-    'gemini-flash-latest',
-    'gemini-3.5-flash',
-    'gemini-3.6-flash'
+    'gemini-3.6-flash',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash'
   ];
 
   try {
@@ -1284,7 +1283,7 @@ async function getAvailableGeminiModel(apiKey) {
     console.warn('ListModels warning:', e);
   }
 
-  return 'gemini-3.1-flash-lite';
+  return 'gemini-3.6-flash';
 }
 
 async function callBrowserGeminiAPI(apiKey, userText, history) {
@@ -1326,11 +1325,11 @@ async function callBrowserGeminiAPI(apiKey, userText, history) {
     contents: contents,
     generationConfig: {
       temperature: 0.9,
-      maxOutputTokens: 90
+      maxOutputTokens: 150
     }
   };
 
-  const modelsToTry = [model, 'gemini-3.1-flash-lite', 'gemini-3.1-flash-lite-preview', 'gemini-flash-latest'];
+  const modelsToTry = [model, 'gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
   const uniqueModels = [...new Set(modelsToTry)];
   let lastError = null;
 

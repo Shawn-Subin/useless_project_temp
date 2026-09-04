@@ -58,10 +58,13 @@ class ChatResponse(BaseModel):
 
 
 def get_current_api_key() -> Optional[str]:
-    """Read API key fresh from .env file or system environment."""
-    env_file_path = Path(__file__).resolve().parent.parent / ".env"
-    env_vars = dotenv_values(env_file_path) if env_file_path.exists() else {}
-    api_key = env_vars.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY", "")
+    """Read API key fresh from system environment or .env file."""
+    api_key = os.environ.get("GEMINI_API_KEY", "")
+    if not api_key:
+        env_file_path = Path(__file__).resolve().parent.parent / ".env"
+        if env_file_path.exists():
+            env_vars = dotenv_values(env_file_path)
+            api_key = env_vars.get("GEMINI_API_KEY", "")
     api_key = api_key.strip() if api_key else ""
     if not api_key or "your_gemini_api_key_here" in api_key:
         return None
@@ -102,11 +105,11 @@ def call_gemini_api(
         config = types.GenerateContentConfig(
             system_instruction=system_prompt,
             temperature=0.9,
-            max_output_tokens=90
+            max_output_tokens=150
         )
 
         response = client.models.generate_content(
-            model="gemini-3.1-flash-lite",
+            model="gemini-3.6-flash",
             contents=contents,
             config=config
         )
@@ -115,14 +118,14 @@ def call_gemini_api(
     except ImportError:
         pass
     except Exception as err:
-        print(f"[Gemini SDK notice]: {err}")
+        print(f"[Gemini SDK notice]: {err}", flush=True)
 
     # 2. Try google-generativeai legacy SDK
     try:
         import google.generativeai as genai_legacy
         genai_legacy.configure(api_key=api_key)
         model = genai_legacy.GenerativeModel(
-            model_name="gemini-3.1-flash-lite",
+            model_name="gemini-3.6-flash",
             system_instruction=system_prompt
         )
         history_tuples = []
@@ -137,14 +140,14 @@ def call_gemini_api(
     except ImportError:
         pass
     except Exception as err:
-        print(f"[Legacy SDK notice]: {err}")
+        print(f"[Legacy SDK notice]: {err}", flush=True)
 
     # 3. Direct REST API Call with priority models
     models_to_try = [
-        "gemini-3.1-flash-lite",
-        "gemini-3.1-flash-lite-preview",
-        "gemini-flash-latest",
-        "gemini-3.5-flash"
+        "gemini-3.6-flash",
+        "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash"
     ]
     last_err = None
 
