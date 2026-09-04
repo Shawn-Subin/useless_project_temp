@@ -2,8 +2,11 @@
 
 # RatioBot  
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://useless-project-temp-o6lb.onrender.com/)
+
 A satirical mini-game where the user attempts to solve a CAPTCHA that gets progressively harder, weirder, and more evasive with each successful solve — ultimately becoming impossible on purpose for comedic effect, culminating in RatioBot (unhinged version) mercilessly roasting the user.
 
+> 🌐 **Play Live on Render:** [https://useless-project-temp-o6lb.onrender.com/](https://useless-project-temp-o6lb.onrender.com/)  
 > **Statutory Notice:** *Assessment difficulty may increase in response to successful completion.*
 
 ---
@@ -77,7 +80,13 @@ For Software:
 
 ---
 
-## Implementation
+## Live Deployment
+Experience the live game directly on Render:  
+🚀 **[https://useless-project-temp-o6lb.onrender.com/](https://useless-project-temp-o6lb.onrender.com/)**
+
+---
+
+## Local Development
 
 ### Installation
 ```bash
@@ -87,11 +96,6 @@ pip install -r requirements.txt
 ### Run
 ```bash
 uvicorn backend.main:app --reload --port 8000
-```
-
-Open your browser and navigate to:
-```
-http://localhost:8000
 ```
 
 ### Run Tests
